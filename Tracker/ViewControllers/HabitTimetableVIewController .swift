@@ -16,10 +16,8 @@ final class HabitTimetableViewController: UIViewController {
     // MARK: - Private Properties
     
     private let headerLabel = UILabel()
-    private let WeekDaysTableView = UITableView()
+    private let weekDaysTableView = UITableView()
     private let doneButton = UIButton(type: .system)
-
-    private let WeekDays: [WeekDay] = [WeekDay.monday, WeekDay.tuesday, WeekDay.wednesday, WeekDay.thursday, WeekDay.friday, WeekDay.saturday, WeekDay.sunday]
     private var timetable: Set<WeekDay> = []
     
     // MARK: - View Life Cycle
@@ -46,14 +44,14 @@ final class HabitTimetableViewController: UIViewController {
         headerLabel.textColor = UIColor.ypBlack
         view.addSubview(headerLabel)
         
-        WeekDaysTableView.translatesAutoresizingMaskIntoConstraints = false
-        WeekDaysTableView.dataSource = self
-        WeekDaysTableView.delegate = self
-        WeekDaysTableView.register(WeekDayCell.self, forCellReuseIdentifier: "WeekDay")
-        WeekDaysTableView.isScrollEnabled = false
-        WeekDaysTableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        WeekDaysTableView.separatorStyle = .none
-        view.addSubview(WeekDaysTableView)
+        weekDaysTableView.translatesAutoresizingMaskIntoConstraints = false
+        weekDaysTableView.dataSource = self
+        weekDaysTableView.delegate = self
+        weekDaysTableView.register(WeekDayCell.self, forCellReuseIdentifier: "WeekDay")
+        weekDaysTableView.isScrollEnabled = false
+        weekDaysTableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        weekDaysTableView.separatorStyle = .none
+        view.addSubview(weekDaysTableView)
         
         doneButton.translatesAutoresizingMaskIntoConstraints = false
         doneButton.layer.cornerRadius = 16
@@ -70,10 +68,10 @@ final class HabitTimetableViewController: UIViewController {
             headerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
             headerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            WeekDaysTableView.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 30),
-            WeekDaysTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            WeekDaysTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            WeekDaysTableView.bottomAnchor.constraint(equalTo: doneButton.topAnchor),
+            weekDaysTableView.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 30),
+            weekDaysTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            weekDaysTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            weekDaysTableView.bottomAnchor.constraint(equalTo: doneButton.topAnchor),
             
             doneButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -87,7 +85,7 @@ final class HabitTimetableViewController: UIViewController {
 
 extension HabitTimetableViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        WeekDays.count
+        Constants.weekDays.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -97,18 +95,17 @@ extension HabitTimetableViewController: UITableViewDataSource {
         }
         
         cell.delegate = self
-        
-        cell.dayLabel.text = WeekDays[indexPath.row].rawValue
+        cell.configureDayLabelText(indexPath: indexPath)
         
         if indexPath.row == 0 {
             cell.contentView.layer.cornerRadius = 16
             cell.contentView.layer.masksToBounds = true
             cell.contentView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        } else if indexPath.row == WeekDays.count - 1 {
+        } else if indexPath.row == Constants.weekDays.count - 1 {
             cell.contentView.layer.cornerRadius = 16
             cell.contentView.layer.masksToBounds = true
             cell.contentView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-            cell.separatorView.isHidden = true
+            cell.hideSeparatorView()
         }
         
         return cell
@@ -133,18 +130,18 @@ extension HabitTimetableViewController: UITableViewDelegate {
 
 extension HabitTimetableViewController: WeekDayCellDelegate {
     func addDayToTimetable(for cell: WeekDayCell) {
-        guard let indexPath = WeekDaysTableView.indexPath(for: cell) else {
+        guard let indexPath = weekDaysTableView.indexPath(for: cell) else {
             assertionFailure("Error: unable to get index path for cell")
             return
         }
-        timetable.insert(WeekDays[indexPath.row])
+        timetable.insert(Constants.weekDays[indexPath.row])
     }
     
     func removeDayFromTimetable(for cell: WeekDayCell) {
-        guard let indexPath = WeekDaysTableView.indexPath(for: cell) else {
+        guard let indexPath = weekDaysTableView.indexPath(for: cell) else {
             assertionFailure("Error: unable to get index path for cell")
             return
         }
-        timetable.remove(WeekDays[indexPath.row])
+        timetable.remove(Constants.weekDays[indexPath.row])
     }
 }

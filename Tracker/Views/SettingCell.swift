@@ -9,13 +9,13 @@ import UIKit
 
 final class SettingCell: UITableViewCell {
     
-    // MARK: - Internal Properties
+    // MARK: - Private Properties
     
-    let textStackView = UIStackView()
-    let nameLabel = UILabel()
-    let chosenOptionsLabel = UILabel()
-    let iconImageView = UIImageView()
-    let separatorView = UIView()
+    private let textStackView = UIStackView()
+    private let nameLabel = UILabel()
+    private let chosenOptionsLabel = UILabel()
+    private let iconImageView = UIImageView()
+    private let separatorView = UIView()
     
     // MARK: - Initializers
     
@@ -26,6 +26,33 @@ final class SettingCell: UITableViewCell {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Internal Methods
+    
+    func configureUIForCategoryButtonOfHabit() {
+        nameLabel.text = "Категория"
+        // TODO: Добавить переменную с названием категории когда создам VC с выбором категории
+        chosenOptionsLabel.text = ""
+        chosenOptionsLabel.isHidden = true
+        contentView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+    }
+    
+    func configureUIForTimetableButtonOfHabit(timetable: Set<AbbreviatedWeekDay>) {
+        nameLabel.text = "Расписание"
+        let days = timetable.map { $0.rawValue }.joined(separator: ", ")
+        chosenOptionsLabel.text = days
+        chosenOptionsLabel.isHidden = chosenOptionsLabel.text == ""
+        contentView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        separatorView.isHidden = true
+    }
+    
+    func configureUIForCategoryButtonOfIrregular() {
+        nameLabel.text = "Категория"
+        // TODO: Добавить переменную с названием категории когда создам VC с выбором категории
+        chosenOptionsLabel.text = ""
+        chosenOptionsLabel.isHidden = true
+        separatorView.isHidden = true
     }
     
     // MARK: - Private Methods

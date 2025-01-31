@@ -17,7 +17,7 @@ enum WeekDay: String {
     case sunday = "Воскресенье"
 }
 
-enum abbreviatedWeekDay: String {
+enum AbbreviatedWeekDay: String {
     case monday = "Пн"
     case tuesday = "Вт"
     case wednesday = "Ср"

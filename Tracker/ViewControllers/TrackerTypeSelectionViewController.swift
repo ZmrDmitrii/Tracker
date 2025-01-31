@@ -30,15 +30,14 @@ final class TrackerTypeSelectionViewController: UIViewController {
     // MARK: - Private Methods
     
     @objc private func didTapHabitButton() {
-        let createHabitViewController = CreateHabitViewController()
+        let createHabitViewController = GenericEventViewController(eventType: .habit)
         createHabitViewController.trackerTypeSelectionViewController = self
         createHabitViewController.delegate = trackersViewController
         present(createHabitViewController, animated: true)
     }
     
-    // TODO: реализовать как в HabitButton
     @objc private func didTapEventButton(){
-        present(CreateEventViewController(), animated: true)
+        present(GenericEventViewController(eventType: .irregular), animated: true)
     }
     
     private func setupViews() {

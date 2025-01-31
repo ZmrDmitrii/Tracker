@@ -7,4 +7,6 @@
 
 import UIKit
 
-final class StatisticsViewController: UIViewController { }
+final class StatisticsViewController: UIViewController {
+    // TODO: добавить функционал
+}

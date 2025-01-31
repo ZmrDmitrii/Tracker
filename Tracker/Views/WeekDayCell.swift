@@ -11,10 +11,13 @@ final class WeekDayCell: UITableViewCell {
     
     // MARK: - Internal Properties
     
-    let dayLabel = UILabel()
-    let chooseDaySwitch = UISwitch()
-    let separatorView = UIView()
     weak var delegate: WeekDayCellDelegate?
+    
+    // MARK: - Private Properties
+    
+    private let dayLabel = UILabel()
+    private let chooseDaySwitch = UISwitch()
+    private let separatorView = UIView()
     
     // MARK: - Initializers
     
@@ -25,6 +28,16 @@ final class WeekDayCell: UITableViewCell {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Internal Methods
+    
+    func configureDayLabelText(indexPath: IndexPath) {
+        dayLabel.text = Constants.weekDays[indexPath.row].rawValue
+    }
+    
+    func hideSeparatorView() {
+        separatorView.isHidden = true
     }
     
     // MARK: - Private Methods
