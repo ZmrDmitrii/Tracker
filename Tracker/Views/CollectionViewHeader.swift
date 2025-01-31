@@ -7,9 +7,13 @@
 
 import UIKit
 
-final class TrackerCollectionViewHeader:  UICollectionReusableView {
+final class CollectionViewHeader:  UICollectionReusableView {
     
-    let headerLabel = UILabel()
+    // MARK: - Private Properties
+    
+    private let headerLabel = UILabel()
+    
+    // MARK: - Initializers
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -28,5 +32,11 @@ final class TrackerCollectionViewHeader:  UICollectionReusableView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Internal Methods
+    
+    func configureUI(header: String) {
+        headerLabel.text = header
     }
 }

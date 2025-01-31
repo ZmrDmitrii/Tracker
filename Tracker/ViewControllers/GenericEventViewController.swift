@@ -7,7 +7,12 @@
 
 import UIKit
 
-final class CreateHabitViewController: UIViewController {
+enum EventType {
+    case habit
+    case irregular
+}
+
+final class GenericEventViewController: UIViewController {
     
     // MARK: - Internal Properties
     
@@ -19,15 +24,32 @@ final class CreateHabitViewController: UIViewController {
     private let headerLabel = UILabel()
     private let maxNumberOfSymbolsErrorLabel = UILabel()
     private let trackerNameTextField = UITextField()
+    private let tapGesture = UITapGestureRecognizer()
     private let textFieldStackView = UIStackView()
     private let spacingView = UIView()
     private let settingsTableView = UITableView()
-    // TODO: добавить (скорее всего UICollectionView с двумя секциями) - emoji, color
+    private let emojiCollectionView = UICollectionView(frame: CGRect.zero,
+                                                       collectionViewLayout: UICollectionViewFlowLayout())
+    private let colorCollectionView = UICollectionView(frame: CGRect.zero,
+                                                       collectionViewLayout: UICollectionViewLayout())
     private let bottomButtonsStackView = UIStackView()
     private let cancelButton = UIButton(type: .system)
     private let createButton = UIButton(type: .system)
     
-    private var timetable: Set<abbreviatedWeekDay> = []
+    private var timetable: Set<AbbreviatedWeekDay> = []
+    private let eventType: EventType
+    private let geometricParameters = CollectionGeometricParameters(numberOfCells: 6, rightInset: 18, leftInset: 18, cellSpacing: 5)
+    
+    // MARK: - Initializers
+    
+    init(eventType: EventType) {
+        self.eventType = eventType
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: - View Life Cycle
     
@@ -59,22 +81,13 @@ final class CreateHabitViewController: UIViewController {
         delegate?.addTracker(newTracker, to: testCategoryName)
     }
     
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
     private func setupViews() {
         view.backgroundColor = UIColor.ypWhite
-        setupHeaderAndTextField()
-        setupTableView()
-        setupCollectionView()
-        setupBottomButtons()
-    }
-    
-    private func setupLayout() {
-        setupHeaderAndTextFieldLayout()
-        setupTableViewLayout()
-        setupCollectionViewLayout()
-        setupBottomButtonsLayout()
-    }
-    
-    private func setupHeaderAndTextField() {
+        
         headerLabel.translatesAutoresizingMaskIntoConstraints = false
         headerLabel.text = "Новая привычка"
         headerLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -99,6 +112,10 @@ final class CreateHabitViewController: UIViewController {
         trackerNameTextField.leftViewMode = .always
         textFieldStackView.addArrangedSubview(trackerNameTextField)
         
+        tapGesture.addTarget(self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+        
         maxNumberOfSymbolsErrorLabel.translatesAutoresizingMaskIntoConstraints = false
         maxNumberOfSymbolsErrorLabel.text = "Ограничение 38 символов"
         maxNumberOfSymbolsErrorLabel.textColor = UIColor.ypRed
@@ -109,9 +126,7 @@ final class CreateHabitViewController: UIViewController {
         spacingView.translatesAutoresizingMaskIntoConstraints = false
         spacingView.isHidden = true
         textFieldStackView.addArrangedSubview(spacingView)
-    }
-    
-    private func setupTableView() {
+        
         settingsTableView.translatesAutoresizingMaskIntoConstraints = false
         settingsTableView.dataSource = self
         settingsTableView.delegate = self
@@ -120,11 +135,16 @@ final class CreateHabitViewController: UIViewController {
         settingsTableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         settingsTableView.separatorStyle = .none
         view.addSubview(settingsTableView)
-    }
-    
-    private func setupCollectionView() { }
-    
-    private func setupBottomButtons() {
+        
+        emojiCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        emojiCollectionView.dataSource = self
+        emojiCollectionView.delegate = self
+        emojiCollectionView.register(EmojiCell.self, forCellWithReuseIdentifier: "emojiCell")
+        emojiCollectionView.register(CollectionViewHeader.self,
+                                     forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                                     withReuseIdentifier: "header")
+        view.addSubview(emojiCollectionView)
+        
         bottomButtonsStackView.translatesAutoresizingMaskIntoConstraints = false
         bottomButtonsStackView.axis = .horizontal
         bottomButtonsStackView.spacing = 8
@@ -153,7 +173,14 @@ final class CreateHabitViewController: UIViewController {
         bottomButtonsStackView.addArrangedSubview(createButton)
     }
     
-    private func setupHeaderAndTextFieldLayout() {
+    private func setupLayout() {
+        let buttonHeight: CGFloat
+        switch eventType {
+        case .habit:
+            buttonHeight = 150
+        case .irregular:
+            buttonHeight = 75
+        }
         NSLayoutConstraint.activate([
             headerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
             headerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -167,25 +194,17 @@ final class CreateHabitViewController: UIViewController {
             trackerNameTextField.trailingAnchor.constraint(equalTo: textFieldStackView.trailingAnchor),
             
             spacingView.heightAnchor.constraint(equalToConstant: 0),
-        ])
-    }
-    
-    private func setupTableViewLayout() {
-        NSLayoutConstraint.activate([
+            
             settingsTableView.topAnchor.constraint(equalTo: textFieldStackView.bottomAnchor, constant: 24),
             settingsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             settingsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            settingsTableView.heightAnchor.constraint(equalToConstant: 150)
-        ])
-    }
-    
-    private func setupCollectionViewLayout() {
-        NSLayoutConstraint.activate([
-        ])
-    }
-    
-    private func setupBottomButtonsLayout() {
-        NSLayoutConstraint.activate([
+            settingsTableView.heightAnchor.constraint(equalToConstant: buttonHeight),
+            
+            emojiCollectionView.topAnchor.constraint(equalTo: settingsTableView.bottomAnchor, constant: 8),
+            emojiCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            emojiCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            emojiCollectionView.bottomAnchor.constraint(equalTo: bottomButtonsStackView.topAnchor),
+            
             bottomButtonsStackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             bottomButtonsStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             bottomButtonsStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -208,7 +227,7 @@ final class CreateHabitViewController: UIViewController {
         present(habitTimetableViewController, animated: true)
     }
     
-    private func convertWeekDayToAbbreviated(day: WeekDay) -> abbreviatedWeekDay {
+    private func convertWeekDayToAbbreviated(day: WeekDay) -> AbbreviatedWeekDay {
         switch day {
         case .monday: return .monday
         case .tuesday: return .tuesday
@@ -223,20 +242,20 @@ final class CreateHabitViewController: UIViewController {
 
 // MARK: - UITextFieldDelegate
 
-extension CreateHabitViewController: UITextFieldDelegate {
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+extension GenericEventViewController: UITextFieldDelegate {
+    func textField(
+        _ textField: UITextField,
+        shouldChangeCharactersIn range: NSRange,
+        replacementString string: String
+    ) -> Bool {
         let maxLength = 38
         
         let currentText = trackerNameTextField.text ?? ""
         let requestedLength = currentText.count + string.count - range.length
         
-        if requestedLength >= maxLength {
-            maxNumberOfSymbolsErrorLabel.isHidden = false
-            spacingView.isHidden = false
-        } else {
-            maxNumberOfSymbolsErrorLabel.isHidden = true
-            spacingView.isHidden = true
-        }
+        let lessThanMaxLength = requestedLength >= maxLength
+        maxNumberOfSymbolsErrorLabel.isHidden = !lessThanMaxLength
+        spacingView.isHidden = !lessThanMaxLength
         
         return requestedLength <= maxLength
     }
@@ -249,9 +268,14 @@ extension CreateHabitViewController: UITextFieldDelegate {
 
 // MARK: - UITableViewDataSource
 
-extension CreateHabitViewController: UITableViewDataSource {
+extension GenericEventViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        2
+        switch eventType {
+        case .habit:
+            return 2
+        case .irregular:
+            return 1
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -260,27 +284,19 @@ extension CreateHabitViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        if indexPath.row == 0 {
-            cell.nameLabel.text = "Категория"
-            // TODO: Добавить переменную с названием категории когда создам VC с выбором категории
-            cell.chosenOptionsLabel.text = ""
-            cell.chosenOptionsLabel.isHidden = true
-            cell.contentView.layer.cornerRadius = 16
-            cell.contentView.layer.masksToBounds = true
-            cell.contentView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        } else if indexPath.row == 1 {
-            cell.nameLabel.text = "Расписание"
-            let days = timetable.map { $0.rawValue }.joined(separator: ", ")
-            cell.chosenOptionsLabel.text = days
-            if cell.chosenOptionsLabel.text == "" {
-                cell.chosenOptionsLabel.isHidden = true
-            } else {
-                cell.chosenOptionsLabel.isHidden = false
+        cell.selectionStyle = .none
+        cell.contentView.layer.cornerRadius = 16
+        cell.contentView.layer.masksToBounds = true
+        
+        switch eventType {
+        case .habit:
+            if indexPath.row == 0 {
+                cell.configureUIForCategoryButtonOfHabit()
+            } else if indexPath.row == 1 {
+                cell.configureUIForTimetableButtonOfHabit(timetable: timetable)
             }
-            cell.contentView.layer.cornerRadius = 16
-            cell.contentView.layer.masksToBounds = true
-            cell.contentView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-            cell.separatorView.isHidden = true
+        case .irregular:
+            cell.configureUIForCategoryButtonOfIrregular()
         }
         
         return cell
@@ -289,7 +305,7 @@ extension CreateHabitViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 
-extension CreateHabitViewController: UITableViewDelegate {
+extension GenericEventViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         75
     }
@@ -306,13 +322,92 @@ extension CreateHabitViewController: UITableViewDelegate {
 
 // MARK: - HabitTimetableDelegate
 
-extension CreateHabitViewController: HabitTimetableDelegate {
-    
+extension GenericEventViewController: HabitTimetableDelegate {
     func updateTimetableButton(with timetable: Set<WeekDay>) {
         for day in timetable {
             let abbreviatedDay = convertWeekDayToAbbreviated(day: day)
             self.timetable.insert(abbreviatedDay)
         }
         settingsTableView.reloadData()
+    }
+}
+
+// MARK: - UICollectionViewDataSource
+
+extension GenericEventViewController: UICollectionViewDataSource {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        numberOfItemsInSection section: Int
+    ) -> Int {
+        Constants.emojis.count
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        cellForItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "emojiCell", for: indexPath) as? EmojiCell else {
+            assertionFailure("Error: unable to get emoji cell")
+            return UICollectionViewCell()
+        }
+        cell.updateEmojiLabelText(indexPath: indexPath)
+        return cell
+    }
+}
+
+// MARK: - UICollectionViewDelegateFlowLayout
+
+extension GenericEventViewController: UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        insetForSectionAt section: Int
+    ) -> UIEdgeInsets {
+        UIEdgeInsets(top: 0, left: geometricParameters.leftInset , bottom: 0, right: geometricParameters.rightInset)
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+        let availableWidth = collectionView.frame.width - geometricParameters.paddingWidth
+        let cellWidth = floor(availableWidth / CGFloat(geometricParameters.numberOfCells) - 4)
+        return CGSize(width: cellWidth, height: 52)
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        viewForSupplementaryElementOfKind kind: String,
+        at indexPath: IndexPath
+    ) -> UICollectionReusableView {
+        guard let header = collectionView.dequeueReusableSupplementaryView(
+            ofKind: UICollectionView.elementKindSectionHeader,
+            withReuseIdentifier: "header",
+            for: indexPath
+        ) as? CollectionViewHeader else {
+            return UICollectionReusableView()
+        }
+        header.configureUI(header: "Emoji")
+        return header
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        referenceSizeForHeaderInSection section: Int
+    ) -> CGSize {
+        let indexPath = IndexPath(row: 0, section: 0)
+        let headerView = self.collectionView(
+            collectionView,
+            viewForSupplementaryElementOfKind: UICollectionView.elementKindSectionHeader,
+            at: indexPath
+        )
+        let size = headerView.systemLayoutSizeFitting(CGSize(width: collectionView.frame.width,
+                                                             height: UIView.layoutFittingCompressedSize.height),
+                                                      withHorizontalFittingPriority: .required,
+                                                      verticalFittingPriority: .fittingSizeLevel)
+        return size
     }
 }

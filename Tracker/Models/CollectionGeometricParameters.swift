@@ -15,7 +15,12 @@ struct CollectionGeometricParameters {
     let cellSpacing: CGFloat
     let paddingWidth: CGFloat
     
-    init(numberOfCells: Int, rightInset: CGFloat, leftInset: CGFloat, cellSpacing: CGFloat) {
+    init(
+        numberOfCells: Int,
+        rightInset: CGFloat,
+        leftInset: CGFloat,
+        cellSpacing: CGFloat
+    ) {
         self.numberOfCells = numberOfCells
         self.rightInset = rightInset
         self.leftInset = leftInset

@@ -11,17 +11,19 @@ final class TrackerCell: UICollectionViewCell {
     
     // MARK: - Internal Properties
     
-    let topView = UIView()
-    let bottomView = UIView()
-    let emojiContainerView = UIView()
-    let emojiLabel = UILabel()
-    let trackerNameLabel = UILabel()
-    let numberOfDaysLabel = UILabel()
-    let buttonContainerView = UIView()
-    let trackerIsCompletedButton = UIButton(type: .system)
-    
-    var IsCompletedButtonTapped = false
     weak var delegate: TrackerCellDelegate?
+    
+    // MARK: - Private Properties
+    
+    private let topView = UIView()
+    private let bottomView = UIView()
+    private let emojiContainerView = UIView()
+    private let emojiLabel = UILabel()
+    private let trackerNameLabel = UILabel()
+    private let numberOfDaysLabel = UILabel()
+    private let buttonContainerView = UIView()
+    private let trackerIsCompletedButton = UIButton(type: .system)
+    private var IsCompletedButtonTapped = false
     
     // MARK: - Initializers
     
@@ -114,7 +116,24 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Public Methods
+    // MARK: - Internal Methods
+    
+    func updateNumberOfDaysLabel(numberOfCompletions: Int) {
+        numberOfDaysLabel.text = "\(numberOfCompletions) дней"
+    }
+    
+    func configureUI(attributedName: NSAttributedString, color: UIColor, emoji: String) {
+        trackerNameLabel.attributedText = attributedName
+        topView.backgroundColor = color
+        emojiLabel.text = emoji
+        trackerIsCompletedButton.backgroundColor = color
+    }
+    
+    func configureCompletedButton(isCompleted: Bool, image: UIImage?) {
+        trackerIsCompletedButton.setImage(image, for: .normal)
+        trackerIsCompletedButton.layer.opacity = isCompleted ? 0.3 : 1
+        IsCompletedButtonTapped = isCompleted
+    }
     
     func updateCompletedButtonAppearance() {
         if !IsCompletedButtonTapped {

@@ -20,9 +20,13 @@ final class TrackersViewController: UIViewController {
     private let emptyListLabel = UILabel()
     private let trackersSearchBar = UISearchBar()
     private let emptyListImageView = UIImageView(image: UIImage.emptyListOfTrackersStub)
-    private let trackersCollectionView = UICollectionView(frame: CGRect.zero, collectionViewLayout: UICollectionViewFlowLayout())
-    
-    private let geometricParameters = CollectionGeometricParameters(numberOfCells: 2, rightInset: 16, leftInset: 16, cellSpacing: 9)
+    private let trackersCollectionView = UICollectionView(frame: CGRect.zero, 
+                                                          collectionViewLayout: UICollectionViewFlowLayout())
+    private let tapGesture = UITapGestureRecognizer()
+    private let geometricParameters = CollectionGeometricParameters(numberOfCells: 2,
+                                                                    rightInset: 16,
+                                                                    leftInset: 16,
+                                                                    cellSpacing: 9)
     private var categories: [TrackerCategory] = []
     private var completedTrackers: Set<TrackerRecord> = []
     private var chosenCategories: [TrackerCategory] = []
@@ -32,7 +36,7 @@ final class TrackersViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Начало теста
+        // TODO: убрать тест, когда добавлю функционал выбора категории
         categories.append(TrackerCategory(header: "Test", trackers: []))
         // Конец теста
         
@@ -61,7 +65,7 @@ final class TrackersViewController: UIViewController {
         }
         
         chosenCategories = updatedCategories
-        updateCollectionVisibility()
+        trackersCollectionView.isHidden = chosenCategories.isEmpty
         trackersCollectionView.reloadData()
     }
     
@@ -71,8 +75,11 @@ final class TrackersViewController: UIViewController {
         present(trackerTypeSelectionViewController, animated: true)
     }
     
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
     private func setupViews() {
-        
         view.backgroundColor = UIColor.ypWhite
         
         topView.translatesAutoresizingMaskIntoConstraints = false
@@ -109,6 +116,10 @@ final class TrackersViewController: UIViewController {
         trackersSearchBar.backgroundImage = UIImage()
         topView.addSubview(trackersSearchBar)
         
+        tapGesture.addTarget(self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+        
         emptyListImageView.translatesAutoresizingMaskIntoConstraints = false
         middleView.addSubview(emptyListImageView)
         
@@ -121,69 +132,50 @@ final class TrackersViewController: UIViewController {
         trackersCollectionView.dataSource = self
         trackersCollectionView.delegate = self
         trackersCollectionView.register(TrackerCell.self, forCellWithReuseIdentifier: "trackerCell")
-        trackersCollectionView.register(TrackerCollectionViewHeader.self,
+        trackersCollectionView.register(CollectionViewHeader.self,
                                         forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
                                         withReuseIdentifier: "header")
         view.addSubview(trackersCollectionView)
     }
     
     private func setupLayout() {
-        
         NSLayoutConstraint.activate([
             topView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             topView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            topView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16)
-        ])
-        
-        NSLayoutConstraint.activate([
+            topView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            
             navigationView.topAnchor.constraint(equalTo: topView.topAnchor),
             navigationView.leadingAnchor.constraint(equalTo: topView.leadingAnchor),
-            navigationView.trailingAnchor.constraint(equalTo: topView.trailingAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
+            navigationView.trailingAnchor.constraint(equalTo: topView.trailingAnchor),
+            
             createNewTrackerButton.leadingAnchor.constraint(equalTo: navigationView.leadingAnchor, constant: -10),
             createNewTrackerButton.topAnchor.constraint(equalTo: navigationView.topAnchor),
             createNewTrackerButton.widthAnchor.constraint(equalToConstant: 44),
             createNewTrackerButton.heightAnchor.constraint(equalToConstant: 44),
-            navigationView.bottomAnchor.constraint(equalTo: createNewTrackerButton.bottomAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
+            navigationView.bottomAnchor.constraint(equalTo: createNewTrackerButton.bottomAnchor),
+            
             datePicker.trailingAnchor.constraint(equalTo: navigationView.trailingAnchor),
-            datePicker.centerYAnchor.constraint(equalTo: navigationView.centerYAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
+            datePicker.centerYAnchor.constraint(equalTo: navigationView.centerYAnchor),
+            
             trackersLabel.leadingAnchor.constraint(equalTo: topView.leadingAnchor),
             trackersLabel.topAnchor.constraint(equalTo: navigationView.bottomAnchor),
-        ])
-        
-        NSLayoutConstraint.activate([
+            
             trackersSearchBar.topAnchor.constraint(equalTo: trackersLabel.bottomAnchor, constant: 7),
             trackersSearchBar.leadingAnchor.constraint(equalTo: topView.leadingAnchor),
             trackersSearchBar.trailingAnchor.constraint(equalTo: topView.trailingAnchor),
-            topView.bottomAnchor.constraint(equalTo: trackersSearchBar.bottomAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
+            topView.bottomAnchor.constraint(equalTo: trackersSearchBar.bottomAnchor),
+            
             middleView.topAnchor.constraint(equalTo: topView.bottomAnchor),
             middleView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            middleView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor/*, constant: 16*/),
-            middleView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor/*, constant: -16*/)
-        ])
-        
-        NSLayoutConstraint.activate([
+            middleView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            middleView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            
             emptyListImageView.centerXAnchor.constraint(equalTo: middleView.centerXAnchor),
-            emptyListImageView.centerYAnchor.constraint(equalTo: middleView.centerYAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
+            emptyListImageView.centerYAnchor.constraint(equalTo: middleView.centerYAnchor),
+            
             emptyListLabel.topAnchor.constraint(equalTo: emptyListImageView.bottomAnchor, constant: 8),
-            emptyListLabel.centerXAnchor.constraint(equalTo: middleView.centerXAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
+            emptyListLabel.centerXAnchor.constraint(equalTo: middleView.centerXAnchor),
+            
             trackersCollectionView.topAnchor.constraint(equalTo: middleView.topAnchor),
             trackersCollectionView.bottomAnchor.constraint(equalTo: middleView.bottomAnchor),
             trackersCollectionView.leadingAnchor.constraint(equalTo: middleView.leadingAnchor),
@@ -199,30 +191,22 @@ final class TrackersViewController: UIViewController {
                                                .paragraphStyle : paragraphStyle])
     }
     
-    private func updateCollectionVisibility() {
-        if chosenCategories.isEmpty {
-            trackersCollectionView.isHidden = true
-        } else {
-            trackersCollectionView.isHidden = false
-        }
-    }
-    
     private func updateNumberOfDaysLabel(cell: TrackerCell, id: UUID) {
         let numberOfCompletions = completedTrackers.filter { $0.id == id }.count
-        cell.numberOfDaysLabel.text = "\(numberOfCompletions) дней"
+        cell.updateNumberOfDaysLabel(numberOfCompletions: numberOfCompletions)
     }
     
-    private func convertIntToAbbreviated(number: Int) -> abbreviatedWeekDay {
-        switch number {
-        case 2: return .monday
-        case 3: return .tuesday
-        case 4: return .wednesday
-        case 5: return .thursday
-        case 6: return .friday
-        case 7: return .saturday
-        case 1: return .sunday
+    private func convertIntToAbbreviated(number: Int) -> AbbreviatedWeekDay {
+        return switch number {
+        case 1: .sunday
+        case 2: .monday
+        case 3: .tuesday
+        case 4: .wednesday
+        case 5: .thursday
+        case 6: .friday
+        case 7: .saturday
         default:
-            return .sunday
+            preconditionFailure("Invalid weekday number: \(number). Valid range is 1 to 7.")
         }
     }
 }
@@ -240,95 +224,89 @@ extension TrackersViewController: UICollectionViewDataSource {
         return category.trackers.count
     }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        cellForItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
         let row = indexPath.row
         let section = indexPath.section
         let tracker = chosenCategories[section].trackers[row]
         let trackerRecord = TrackerRecord(id: tracker.id, date: chosenDate)
         let isCompleted = completedTrackers.contains(trackerRecord)
         
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "trackerCell", for: indexPath) as? TrackerCell else {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "trackerCell",
+            for: indexPath
+        ) as? TrackerCell else {
             assertionFailure("Error: unable to get tracker cell")
             return UICollectionViewCell()
         }
         
         cell.delegate = self
-        cell.trackerNameLabel.attributedText = createAttributedText(tracker.name)
-        cell.topView.backgroundColor = tracker.color
-        cell.emojiLabel.text = tracker.emoji
-        cell.trackerIsCompletedButton.backgroundColor = tracker.color
+        cell.configureUI(attributedName: createAttributedText(tracker.name), color: tracker.color, emoji: tracker.emoji)
         
         updateNumberOfDaysLabel(cell: cell, id: tracker.id)
         
-        if isCompleted {
-            cell.trackerIsCompletedButton.setImage(
-                UIImage(systemName: "checkmark",
-                        withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .heavy)),
-                for: .normal
-            )
-            cell.trackerIsCompletedButton.layer.opacity = 0.3
-            cell.IsCompletedButtonTapped = true
-        } else {
-            cell.trackerIsCompletedButton.setImage(
-                UIImage(systemName: "plus",
-                        withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)),
-                for: .normal
-            )
-            cell.trackerIsCompletedButton.layer.opacity = 1
-            cell.IsCompletedButtonTapped = false
-        }
+        let image = isCompleted ?
+        UIImage(systemName: "checkmark", withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .heavy)) :
+        UIImage(systemName: "plus", withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .medium))
+        cell.configureCompletedButton(isCompleted: isCompleted, image: image)
         
         return cell
     }
 }
 
-// MARK: - UICollectionViewDelegate
-
-extension TrackersViewController: UICollectionViewDelegate { }
-
 // MARK: - UICollectionViewDelegateFlowLayout
 
 extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        insetForSectionAt section: Int
+    ) -> UIEdgeInsets {
         UIEdgeInsets(top: 0, left: geometricParameters.leftInset , bottom: 0, right: geometricParameters.rightInset)
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
         let availableWidth = collectionView.frame.width - geometricParameters.paddingWidth
         let cellWidth = floor(availableWidth / CGFloat(geometricParameters.numberOfCells) - 1)
-        
         return CGSize(width: cellWidth, height: 140)
     }
     
-    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        
+    func collectionView(
+        _ collectionView: UICollectionView,
+        viewForSupplementaryElementOfKind kind: String,
+        at indexPath: IndexPath
+    ) -> UICollectionReusableView {
         guard let header = collectionView.dequeueReusableSupplementaryView(
             ofKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: "header",
             for: indexPath
-        ) as? TrackerCollectionViewHeader else {
+        ) as? CollectionViewHeader else {
             return UICollectionReusableView()
         }
         
         let section = indexPath.section
-        
-        header.headerLabel.text = chosenCategories[section].header
-        
+        header.configureUI(header: chosenCategories[section].header)
         return header
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        referenceSizeForHeaderInSection section: Int
+    ) -> CGSize {
         let indexPath = IndexPath(row: 0, section: section)
-        
         let headerView = self.collectionView(
             collectionView,
             viewForSupplementaryElementOfKind: UICollectionView.elementKindSectionHeader,
             at: indexPath
         )
-        
         let size = headerView.systemLayoutSizeFitting(CGSize(width: collectionView.frame.width,
                                                              height: UIView.layoutFittingCompressedSize.height),
                                                       withHorizontalFittingPriority: .required,
@@ -339,7 +317,14 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
 
 // MARK: - UISearchBarDelegate
 
-extension TrackersViewController: UISearchBarDelegate { }
+extension TrackersViewController: UISearchBarDelegate {
+    // TODO: добавить функционал поиска если нужно
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+    
+}
 
 // MARK: - TrackerCellDelegate
 
