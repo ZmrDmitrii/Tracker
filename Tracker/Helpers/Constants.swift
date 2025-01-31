@@ -9,5 +9,11 @@ import Foundation
 
 enum Constants {
     static let emojis = ["🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝", "😪"]
-    static let weekDays: [WeekDay] = [WeekDay.monday, WeekDay.tuesday, WeekDay.wednesday, WeekDay.thursday, WeekDay.friday, WeekDay.saturday, WeekDay.sunday]
+    static let weekDays: [WeekDay] = [WeekDay.monday, 
+                                      WeekDay.tuesday,
+                                      WeekDay.wednesday,
+                                      WeekDay.thursday,
+                                      WeekDay.friday,
+                                      WeekDay.saturday,
+                                      WeekDay.sunday]
 }

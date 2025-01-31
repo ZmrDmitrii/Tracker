@@ -8,13 +8,13 @@
 import Foundation
 
 struct CollectionGeometricParameters {
-    
+
     let numberOfCells: Int
     let rightInset: CGFloat
     let leftInset: CGFloat
     let cellSpacing: CGFloat
     let paddingWidth: CGFloat
-    
+
     init(
         numberOfCells: Int,
         rightInset: CGFloat,
